@@ -1,0 +1,66 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using DSharpPlus;
+
+using Microsoft.Extensions.Logging;
+
+namespace MyFirstBot
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            MainAsync().GetAwaiter().GetResult();
+        }
+
+        static async Task MainAsync()
+        {
+            var discord = new DiscordClient(new DiscordConfiguration()
+            {
+                Token = "",
+                TokenType = TokenType.Bot,
+                MinimumLogLevel = LogLevel.Debug,
+                LogTimestampFormat = "MMM dd yyyy - hh:mm:ss tt"
+            });
+
+            discord.MessageCreated += async (s, e) =>
+            {
+                if (e.Message.Content.ToLower().StartsWith("!create"))
+                {
+                    var channelName = e.Message.Content.Split(' ')[1];
+                    var channel = await e.Guild.CreateTextChannelAsync(channelName, null, "BOT_GROUPS");
+                    /*channel.Guild.GetRole(744946892198117416);//Все
+                    channel.Guild.GetRole(754415795626573855);//Посвященный
+                    channel.Guild.GetRole(745372331941167234);//Хуцкер*/
+                    await e.Message.Channel.SendMessageAsync(channel.Name + " Создан");
+                }
+                if (e.Message.Content.ToLower().StartsWith("!cat"))
+                {
+                    var categoryName = e.Message.Content.Split(' ')[1];
+                    var category = await e.Guild.CreateChannelCategoryAsync(categoryName);
+                    await e.Message.Channel.SendMessageAsync(category.Name + " Создан");
+                }
+                if (e.Message.Content.ToLower().StartsWith("!stat"))
+                {
+                    //await e.Message.Channel.SendMessageAsync(discord.CurrentUser.AvatarUrl);
+                    //await e.Message.Channel.SendMessageAsync(e.Message.Flags.Value.ToString());
+                    foreach (var user in e.MentionedUsers)
+                    {
+                        await e.Message.Channel.SendMessageAsync(user.Mention + " KAVO");
+                    }
+                }
+            };
+
+            discord.MessageDeleted += async (s, e) =>
+            {
+                await e.Channel.SendMessageAsync(e.Message.Content);
+                await e.Message.RespondAsync("ATATA " + e.Message.Author.Mention);
+            };
+
+            await discord.ConnectAsync();
+            await Task.Delay(-1);
+        }
+    }
+}
